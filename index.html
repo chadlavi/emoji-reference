@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emoji HTML code lookup</title>
+  <link rel="stylesheet" href="https://chadlavi.github.io/tokens.css/tokens.css" />
+  <style>
+    :root {
+      font-family: var(--font-family-sans);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: var(--size-4);
+    }
+
+    main {
+      width: var(--size-full);
+      max-width: var(--max-width-lg);
+      margin: 0 auto;
+    }
+
+    label {
+      display: block;
+      width: var(--size-max);
+      max-width: 100%;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .small {
+      font-size: var(--font-size-00);
+    }
+
+    .light {
+      color: var(--color-grey-700);
+    }
+
+    .result {
+      box-shadow: var(--elevation-4);
+      padding: var(--size-4);
+      margin: var(--size-4) 0;
+      border-radius: var(--radius-md);
+    }
+
+    .result-data {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    code.html-code {
+      padding: var(--size-1);
+      border-radius: var(--radius);
+      background-color: var(--color-sky-50);
+    }
+
+    #success {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      transition: transform 0.25s var(--easing-standard);
+    }
+
+    #success.out {
+      transform: translateY(100%);
+    }
+
+    #success.in {
+      transform: translateY(0);
+    }
+
+    #notification {
+      background-color: var(--color-green-50);
+      border: 1px solid var(--color-green-300);
+      color: var(--color-green-800);
+      padding: var(--size-4);
+      width: var(--size-max);
+      max-width: var(--size-full);
+      border-radius: var(--radius);
+      box-shadow: var(--elevation-5);
+      z-index: var(--layer-top);
+      margin: var(--size-4) 0;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Emoji HTML code lookup</h1>
+    <div id="root"></div>
+    <noscript>
+      Sorry, you need JavaScript enabled to run this app. &#x1F614;
+    </noscript>
+  </main>
+  <script type="module">
+    "use strict";
+
+    import data from "./emoji-data.js"
+
+    import {
+      html,
+      render,
+      useState,
+      useEffect,
+    } from "https://unpkg.com/htm@3.1.0/preact/standalone.module.js";
+
+    const search = (input) => {
+      let results = [];
+      if (input) {
+        const regex = new RegExp(input, "gi");
+        [...Object.keys(data)].forEach(k => {
+          const e = data[k];
+          if (
+            e.body.match(regex) ||
+            e.prefix.match(regex) ||
+            e.description.match(regex)
+          ) {
+            results.push(e)
+          }
+        })
+      }
+      return results;
+    };
+
+    const copy = (text) => (onSuccess) => (e) => {
+      navigator.clipboard.writeText(text).then(() => {
+        onSuccess();
+      }, (err) => {
+        console.error('Async: Could not copy text: ', err);
+      });
+    };
+
+    const App = () => {
+      const [input, setInput] = useState("");
+      const [showSuccess, setShowSuccess] = useState(false);
+      const [copied, setCopied] = useState("");
+
+      const results = search(input);
+
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          if (showSuccess === true) {
+            setShowSuccess(false);
+          }
+        }, 1500);
+        return () => clearInterval(timer);
+      }, [showSuccess]);
+
+      return html`
+        <input autofocus id="input" aria-label="search input" aria-describedby="input-description" type="search" value="${input}" oninput="${(e) => setInput(e.target.value)}" />
+        <div class="small light" id="input-description">search by emoji name or by typing the emoji in directly</div>
+        ${input.length > 0 && html`
+          <div id="results">
+            ${results.length > 0
+            ? results.map(r => html`
+                    <div class="result">
+                      <h2>${r.description} ${r.prefix.replace(/^ji:/, "")}</h2>
+                      <div class="result-data">
+                        <div><code class="html-code" title="HTML code for ${r.description}">${r.body}</code></div>
+                        <button id="copy-${r.description}" onclick="${copy(r.body)(() => { setCopied(r.body); setShowSuccess(true); })}">copy code</button>
+                      </div>
+                    </div>
+                  `)
+            : "No results"}
+          </div>
+        `}
+        <div class="${showSuccess ? "in" : "out"}" id="success">
+          ${copied && html`<div id="notification">
+            <code>${copied}</code> copied successfully!
+          </div>`}
+        </div>  
+      `;
+    }
+
+    render(html`<${App} />`, document.getElementById("root"));
+  </script>
+</body>
+
+</html>

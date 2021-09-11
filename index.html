@@ -38,6 +38,7 @@
 
     h2 {
       margin-top: 0;
+      margin-bottom: var(--size-4);
     }
 
     .small {
@@ -53,6 +54,20 @@
       padding: var(--size-4);
       margin: var(--size-4) 0;
       border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: var(--size-4);
+    }
+
+    .emoji {
+      font-size: var(--font-size-7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .result-info {
+      flex-grow: 1;
     }
 
     .result-data {
@@ -170,10 +185,13 @@
             ${results.length > 0
             ? results.map(r => html`
                     <div class="result">
-                      <h2>${r.description} ${r.prefix.replace(/^ji:/, "")}</h2>
-                      <div class="result-data">
-                        <div><code class="html-code" title="HTML code for ${r.description}">${r.body}</code></div>
-                        <button id="copy-${r.description}" onclick="${copy(r.body)(() => { setCopied(r.body); setShowSuccess(true); })}">copy code</button>
+                      <div class="emoji"><span role="image" aria-label="">${r.description}</span></div>
+                      <div class="result-info">
+                        <h2>${r.prefix.replace(/^ji:/, "")}</h2>
+                        <div class="result-data">
+                          <div><code class="html-code" title="HTML code for ${r.description}">${r.body}</code></div>
+                          <button id="copy-${r.description}" onclick="${copy(r.body)(() => { setCopied(r.body); setShowSuccess(true); })}">copy</button>
+                        </div>
                       </div>
                     </div>
                   `)

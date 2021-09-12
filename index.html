@@ -135,22 +135,38 @@
       useEffect,
     } from "https://unpkg.com/htm@3.1.0/preact/standalone.module.js";
 
+    const splitOnEmoji = (str) => {
+      const s = str.split(/([\uD800-\uDBFF][\uDC00-\uDFFF])/);
+      let arr = [];
+      for (var i = 0; i < s.length; i++) {
+        const char = s[i];
+        if (char !== "") {
+          arr.push(char);
+        }
+      }
+      return arr.map(e => e.trim());
+    };
+
     const search = (input) => {
       let results = [];
-      if (input) {
-        const regex = new RegExp(input, "gi");
-        [...Object.keys(data)].forEach(k => {
-          const e = data[k];
-          if (
-            e.body.match(regex) ||
-            e.prefix.match(regex) ||
-            e.description.match(regex)
-          ) {
-            results.push(e)
-          }
+      const trimmed = input.trim();
+      if (trimmed) {
+        const regexes = splitOnEmoji(trimmed).map(s => new RegExp(s, "gi"))
+        const entries = Object.keys(data);
+        regexes.forEach(r => {
+          entries.forEach(k => {
+            const e = data[k];
+            if (
+              e.body.match(r) ||
+              e.prefix.match(r) ||
+              e.description.match(r)
+            ) {
+              results.push(e)
+            }
+          })
         })
       }
-      return results;
+      return Array.from(new Set(results));
     };
 
     const copy = (text) => (onSuccess) => (e) => {
